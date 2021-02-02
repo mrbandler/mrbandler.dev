@@ -9,7 +9,7 @@
             justify-content="center"
         >
             <CHeading text-align="center" mb="4">
-                ⚡️ Hello chakra-ui/vue
+                🏗 Under construction 🚧
             </CHeading>
             <CFlex justify="center" direction="column" align="center">
                 <CBox mb="3">
