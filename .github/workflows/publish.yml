@@ -1,0 +1,81 @@
+name: publish
+
+on:
+    push:
+        tags:
+            - "v*"
+
+jobs:
+    build:
+        runs-on: ${{ matrix.os }}
+
+        strategy:
+            matrix:
+                os: [ubuntu-latest]
+                node: [14]
+
+        steps:
+            - name: Checkout 🛎
+              uses: actions/checkout@v2
+
+            - name: Setup node env 🏗
+              uses: actions/setup-node@v2.1.2
+              with:
+                  node-version: ${{ matrix.node }}
+
+            - name: Get yarn cache directory path 🛠
+              id: yarn-cache-dir-path
+              run: echo "::set-output name=dir::$(yarn cache dir)"
+
+            - name: Cache node_modules 📦
+              uses: actions/cache@v2
+              id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+              with:
+                  path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+                  key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-yarn-
+
+            - name: Install dependencies 👨🏻‍💻
+              run: yarn
+
+            - name: Run linter 👀
+              run: yarn lint
+
+            - name: Run build 🛠
+              run: yarn build
+
+            - name: Run tests 🧪
+              run: yarn test
+
+            - name: Generate static site ⚙
+              run: yarn generate
+
+            - name: Upload a build artifact 🔼
+              uses: actions/upload-artifact@v2
+              with:
+                  name: mrbandler-dev-artifacts
+                  path: dist
+
+    publish:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout 🛎
+              uses: actions/checkout@v2
+
+            - name: Download build artifacts 🔽
+              uses: actions/download-artifact@v2
+              with:
+                  name: mrbandler-dev-artifacts
+                  path: dist
+
+            - name: Deploy to Firebase 🔥
+              uses: FirebaseExtended/action-hosting-deploy@v0
+              with:
+                  repoToken: "${{ secrets.GITHUB_TOKEN }}"
+                  firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_MRBANDLER_DEV_5326C }}"
+                  channelId: live
+                  projectId: mrbandler-dev-5326c
+              env:
+                  FIREBASE_CLI_PREVIEWS: hostingchannels
