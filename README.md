@@ -1,2 +1,1 @@
-# mrbandler.dev
-My own personal website.
+## 🚧 UNDER CONSTRUCTION 🚧
